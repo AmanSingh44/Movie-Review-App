@@ -6,7 +6,7 @@ exports.isValidPassResetToken = async(req, res, next) => {
     if (!token.trim() || !isValidObjectId(userId)) return res.json({ error: "Invalid Request" })
 
     const resetToken = await PasswordResetToken.findOne({ owner: userId })
-    if (!resetToken) return res.json({ error: "Unauthorised access, Invalid Request" })
+    if (!resetToken) return res.status(404).json({ error: "Unauthorised access, Invalid Request" })
 
     const matched = await resetToken.compareToken(token);
     if (!matched) return res.json({ error: "Unauthorised access, Invalid Request" })

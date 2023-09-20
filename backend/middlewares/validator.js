@@ -7,6 +7,11 @@ const userValidator = [
     check('password').trim().not().isEmpty().withMessage('Password is Empty').isLength({ min: 8, max: 20 }).withMessage('Password must be 8 to 10 characters long')
 ]
 
+const validatePassword = [
+    check('newPassword').trim().not().isEmpty().withMessage('Password is Empty').isLength({ min: 8, max: 20 }).withMessage('Password must be 8 to 10 characters long')
+
+]
+
 const validate = (req, res, next) => {
     const error = validationResult(req).array()
     if (error.length) {
@@ -15,4 +20,4 @@ const validate = (req, res, next) => {
     next()
 }
 
-module.exports = { userValidator, validate }
+module.exports = { userValidator, validate, validatePassword }

@@ -128,7 +128,14 @@ const resendEmailVerificationToken = async(req, res) => {
 
 
     //send otp to user
-    var transport = generateMailTranporter()
+    var transport = nodemailer.createTransport({
+        host: "sandbox.smtp.mailtrap.io",
+        port: 2525,
+        auth: {
+            user: "cfe76195695bed",
+            pass: "56b03a7882315e"
+        }
+    });
 
     transport.sendMail({
         from: 'verification@reviewapp.com',
@@ -141,6 +148,7 @@ const resendEmailVerificationToken = async(req, res) => {
       `
     })
 
+
     res.status(201).json({
         message: "New OTP has been sent to your email"
     })
@@ -151,7 +159,7 @@ const forgetPassword = async(req, res) => {
     if (!email) return res.json({ error: "Email is missing" })
 
     const user = await User.findOne({ email })
-    if (!user) return res.status(404).jsom({ error: "User not found" })
+    if (!user) return res.status(404).json({ error: "User not found" })
 
     const alreadyHasToken = await PasswordResetToken.findOne({ owner: user._id })
     if (alreadyHasToken) return res.json({ error: "You can generate a new Token after one hour" })
@@ -161,7 +169,7 @@ const forgetPassword = async(req, res) => {
     await newPasswordResetToken.save()
     const resetPasswordUrl = `http://localhost:3000/reset-password?token=${token}&id=${user._id}`
 
-    var transport = nodemailer.createTransport({
+    const transport = nodemailer.createTransport({
         host: "sandbox.smtp.mailtrap.io",
         port: 2525,
         auth: {
@@ -183,4 +191,41 @@ const forgetPassword = async(req, res) => {
     res.json({ message: "Link sent to your email" })
 }
 
-module.exports = { create, verifyEmail, resendEmailVerificationToken, forgetPassword }
+const sendResetPasswordTokenStatus = (req, res) => {
+    res.json({ valid: true })
+}
+
+const resetPassword = async(req, res) => {
+    const { newPassword, userId } = req.body
+
+    const user = await User.findById(userId)
+    const matched = await user.comparePassword(newPassword)
+    if (matched) return res.json({ error: "The new password must be different from the old one" })
+
+    user.password = newPassword
+    await user.save()
+
+    await PasswordResetToken.findByIdAndDelete(req.resetToken._id)
+
+    const transport = nodemailer.createTransport({
+        host: "sandbox.smtp.mailtrap.io",
+        port: 2525,
+        auth: {
+            user: "cfe76195695bed",
+            pass: "56b03a7882315e"
+        }
+    });
+
+    transport.sendMail({
+        from: 'security@reviewapp.com',
+        to: user.email,
+        subject: 'Password reset sucessfully',
+        html: `
+        <h1>Password reset sucessfully</h1>
+    
+      `
+    })
+    res.json({ message: "Password changed sucessfully" })
+}
+
+module.exports = { create, verifyEmail, resendEmailVerificationToken, forgetPassword, sendResetPasswordTokenStatus, resetPassword }
