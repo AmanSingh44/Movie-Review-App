@@ -12,6 +12,12 @@ const validatePassword = [
 
 ]
 
+const signInValidator = [
+    check('email').normalizeEmail().isEmail().withMessage('Email is invalid'),
+    check('password').trim().not().isEmpty().withMessage('Password is Empty')
+
+]
+
 const validate = (req, res, next) => {
     const error = validationResult(req).array()
     if (error.length) {
@@ -20,4 +26,4 @@ const validate = (req, res, next) => {
     next()
 }
 
-module.exports = { userValidator, validate, validatePassword }
+module.exports = { userValidator, validate, validatePassword, signInValidator }
