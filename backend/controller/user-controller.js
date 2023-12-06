@@ -50,7 +50,11 @@ const create = async(req, res) => {
     })
 
     res.status(201).json({
-        message: "Please verify your email. OTP has been sent to your email account"
+        user: {
+            id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+        }
     })
 }
 
@@ -98,7 +102,12 @@ const verifyEmail = async(req, res) => {
         html: "<h1>Welcome to our App</h1>"
     })
 
-    res.json({ message: "Your email is verified" })
+    const jwtToken = jwt.sign({ userId: user._id }, 'jsflksjflksfjljsasf')
+
+    res.json({
+        user: { id: user._id, name: user.name, email: user.email, token: jwtToken, isVerified: user.isVerified },
+        message: "Your email is verified"
+    })
 }
 
 
@@ -168,7 +177,7 @@ const forgetPassword = async(req, res) => {
     const token = await generateRandomByte()
     const newPasswordResetToken = await PasswordResetToken({ owner: user._id, token })
     await newPasswordResetToken.save()
-    const resetPasswordUrl = `http://localhost:3000/reset-password?token=${token}&id=${user._id}`
+    const resetPasswordUrl = `http://localhost:3000/auth/reset-password?token=${token}&id=${user._id}`
 
     const transport = nodemailer.createTransport({
         host: "sandbox.smtp.mailtrap.io",
@@ -238,11 +247,11 @@ const signIn = async(req, res) => {
     const matched = await user.comparePassword(password)
     if (!matched) return res.json({ error: "Email or password mismatch" })
 
-    const { _id, name } = user
+    const { _id, name, isVerified } = user
 
     const jwtToken = jwt.sign({ userId: _id }, 'jsflksjflksfjljsasf')
 
-    res.json({ user: { id: _id, name, email, token: jwtToken } })
+    res.json({ user: { id: _id, name, email, token: jwtToken, isVerified } })
 
 }
 

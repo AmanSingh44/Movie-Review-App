@@ -3,7 +3,7 @@ const { create, verifyEmail, resendEmailVerificationToken, forgetPassword, sendR
 const { userValidator, validate, validatePassword, signInValidator } = require('../middlewares/validator');
 const { isValidPassResetToken } = require('../middlewares/user')
 const router = express.Router()
-
+const { isAuth } = require('../middlewares/auth')
 
 
 router.post('/create', userValidator, validate, create)
@@ -13,6 +13,13 @@ router.post('/resend-verification-token', resendEmailVerificationToken)
 router.post('/forgot-password', forgetPassword)
 router.post('/verify-pass-reset-token', isValidPassResetToken, sendResetPasswordTokenStatus)
 router.post('/reset-password', validate, validatePassword, isValidPassResetToken, resetPassword)
+
+router.get('/is-auth', isAuth, async(req, res) => {
+    const { user } = req
+
+    res.json({ user: { id: user._id, name: user.name, email: user.email, isVerified: user.isVerified } })
+
+})
 
 
 
